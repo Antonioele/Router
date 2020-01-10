@@ -111,7 +111,7 @@ class Router implements RouterInterfaceAlias
      * @var \Magento\Framework\App\Router\PathConfigInterface
      */
     protected $pathConfig;
-
+    protected $logger;
     /**
      * @param \Magento\Framework\App\Router\ActionList $actionList
      * @param \Magento\Framework\App\ActionFactory $actionFactory
@@ -134,7 +134,8 @@ class Router implements RouterInterfaceAlias
         \Magento\Framework\App\Route\ConfigInterface $routeConfig,
         \Magento\Framework\UrlInterface $url,
         \Magento\Framework\Code\NameBuilder $nameBuilder,
-        \Magento\Framework\App\Router\PathConfigInterface $pathConfig
+        \Magento\Framework\App\Router\PathConfigInterface $pathConfig,
+    \Psr\Log\LoggerInterface $logger
     ) {
         $this->actionList = $actionList;
         $this->actionFactory = $actionFactory;
@@ -144,12 +145,86 @@ class Router implements RouterInterfaceAlias
         $this->_url = $url;
         $this->nameBuilder = $nameBuilder;
         $this->pathConfig = $pathConfig;
+        $this->logger =$logger;
     }
 
     public function match(\Magento\Framework\App\RequestInterface $request)
     {
-        $antonio=$request->getPathInfo()."plutooooooooooooooo";
-        echo $antonio;
+$poutp=$this->parseRequest($request);
+$actionistance=$this->matchAction($request,$poutp);
+
+        $productId = $request->getParam('id');
+        echo $productId;
+        $pluto=["pippo"=>$request];
+//$this->logger->info("la request",$pluto);
+$this->logger->info("output",$poutp);
+
+
+
+
+    }
+
+    protected function parseRequest(\Magento\Framework\App\RequestInterface $request)
+    {
+        $output = [];
+
+        $path = trim($request->getPathInfo(), '/');
+
+        $params = explode('/', $path ? $path : $this->pathConfig->getDefaultPath());
+        foreach ($this->_requiredParams as $paramName) {
+            $output[$paramName] = array_shift($params);
+        }
+
+        for ($i = 0, $l = sizeof($params); $i < $l; $i += 2) {
+            $output['variables'][$params[$i]] = isset($params[$i + 1]) ? urldecode($params[$i + 1]) : '';
+        }
+        return $output;
+    }
+    protected function matchAction(\Magento\Framework\App\RequestInterface $request, array $params)
+    {
+        $moduleFrontName = $this->matchModuleFrontName($request, $params['moduleFrontName']);
+        if (empty($moduleFrontName)) {
+            return null;
+        }
+
+        /**
+         * Searching router args by module name from route using it as key
+         */
+        $modules = $this->_routeConfig->getModulesByFrontName($moduleFrontName);
+
+        if (empty($modules) === true) {
+            return null;
+        }
+
+        /**
+         * Going through modules to find appropriate controller
+         */
+        $currentModuleName = null;
+        $actionPath = null;
+        $action = null;
+        $actionInstance = null;
+
+
+        if (isset($params['variables'])) {
+            $request->setParams($params['variables']);
+        }
+        return $actionInstance;
+    }
+    protected function matchModuleFrontName(\Magento\Framework\App\RequestInterface $request, $param)
+    {
+        // get module name
+        if ($request->getModuleName()) {
+            $moduleFrontName = $request->getModuleName();
+        } elseif (!empty($param)) {
+            $moduleFrontName = $param;
+        } else {
+            $moduleFrontName = $this->_defaultPath->getPart('module');
+            $request->setAlias(\Magento\Framework\Url::REWRITE_REQUEST_PATH_ALIAS, '');
+        }
+        if (!$moduleFrontName) {
+            return null;
+        }
+        return $moduleFrontName;
     }
 
 }
