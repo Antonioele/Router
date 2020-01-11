@@ -5,6 +5,7 @@ namespace Antonioele\Router\Controller;
 
 
 use Magento\Framework\App\RouterInterface as RouterInterfaceAlias;
+use Magento\Catalog\Api\ProductRepositoryInterface;
 
 class Router implements RouterInterfaceAlias
 
@@ -21,7 +22,9 @@ class Router implements RouterInterfaceAlias
 
     /**
      * @var string
+     *
      */
+
     protected $actionInterface = \Magento\Framework\App\ActionInterface::class;
 
     /**
@@ -45,7 +48,7 @@ class Router implements RouterInterfaceAlias
      * @var \Magento\Framework\App\Route\ConfigInterface
      */
     protected $_routeConfig;
-
+    private $productRepository;
     /**
      * Url security information.
      *
@@ -127,6 +130,7 @@ class Router implements RouterInterfaceAlias
      * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
     public function __construct(
+        ProductRepositoryInterface $productRepository,
         \Magento\Framework\App\Router\ActionList $actionList,
         \Magento\Framework\App\ActionFactory $actionFactory,
         \Magento\Framework\App\DefaultPathInterface $defaultPath,
@@ -137,6 +141,7 @@ class Router implements RouterInterfaceAlias
         \Magento\Framework\App\Router\PathConfigInterface $pathConfig,
     \Psr\Log\LoggerInterface $logger
     ) {
+        $this->productRepository =$productRepository;
         $this->actionList = $actionList;
         $this->actionFactory = $actionFactory;
         $this->_responseFactory = $responseFactory;
@@ -155,6 +160,10 @@ $actionistance=$this->matchAction($request,$poutp);
 
         $productId = $request->getParam('id');
         echo $productId;
+      $ppproduct=  $this->productRepository->getById(1402);
+      $ppproduct->getName();
+$ppp=["www"=>$ppproduct->getName()];
+$this->logger->info("ppppppp",$ppp);
         $pluto=["pippo"=>$request];
 //$this->logger->info("la request",$pluto);
 $this->logger->info("output",$poutp);
